@@ -14,17 +14,27 @@ func Visualize2Slices[T any](slice1, slice2 []T) {
 	val2 := reflect.ValueOf(slice2)
 
 	// ASCII representation header
-	fmt.Println("    +--------------------+-------+-------+              +--------------------+-------+-------+")
-	fmt.Println("    | Slice1             |  Len  |  Cap  |              | Slice2             |  Len  |  Cap  |")
-	fmt.Println("    +--------------------+-------+-------+              +--------------------+-------+-------+")
+	fmt.Println(
+		"    +--------------------+-------+-------+              +--------------------+-------+-------+",
+	)
+	fmt.Println(
+		"    | Slice1             |  Len  |  Cap  |              | Slice2             |  Len  |  Cap  |",
+	)
+	fmt.Println(
+		"    +--------------------+-------+-------+              +--------------------+-------+-------+",
+	)
 	fmt.Printf("    | 0x%016x | %3d   | %3d   |              | 0x%016x | %3d   | %3d   |\n",
 		header1.Data, header1.Len, header1.Cap,
 		header2.Data, header2.Len, header2.Cap)
-	fmt.Println("    +--------------------+-------+-------+              +--------------------+-------+-------+")
+	fmt.Println(
+		"    +--------------------+-------+-------+              +--------------------+-------+-------+",
+	)
 	fmt.Println("        |                                                    |")
 	fmt.Println("        v                                                    v")
 	fmt.Println("        |                                                    |")
-	fmt.Println("    +--------------------+-------------------------+    +--------------------+-------------------------+")
+	fmt.Println(
+		"    +--------------------+-------------------------+    +--------------------+-------------------------+",
+	)
 
 	// Displaying the contents of both slices side-by-side
 	maxLen := max(header1.Len, header2.Len)
@@ -42,7 +52,11 @@ func Visualize2Slices[T any](slice1, slice2 []T) {
 		address2, display2 := printElem(val2, header2, i)
 
 		if i == header2.Len {
-			fmt.Printf("    | 0x%016x | %-22s  |    +--------------------+-------------------------+\n", address1, display1)
+			fmt.Printf(
+				"    | 0x%016x | %-22s  |    +--------------------+-------------------------+\n",
+				address1,
+				display1,
+			)
 		} else if i == header1.Len {
 			fmt.Printf("    +--------------------+-------------------------+    | 0x%016x | %-22s  |\n", address2, display2)
 		} else if i > header2.Len {
@@ -56,11 +70,15 @@ func Visualize2Slices[T any](slice1, slice2 []T) {
 
 	switch {
 	case header1.Len == header2.Len:
-		fmt.Println("    +--------------------+-------------------------+    +--------------------+-------------------------+")
+		fmt.Println(
+			"    +--------------------+-------------------------+    +--------------------+-------------------------+",
+		)
 	case header1.Len > header2.Len:
 		fmt.Println("    +---------------------+------------------------+")
 	case header2.Len > header1.Len:
-		fmt.Println("                                                        +--------------------+-------------------------+")
+		fmt.Println(
+			"                                                        +--------------------+-------------------------+",
+		)
 	}
 
 	fmt.Println()
@@ -82,6 +100,7 @@ func VisualizeSlice[T any](slice []T) {
 	fmt.Println("        |")
 
 	// Underlying array
+	fmt.Println("    +----------------+")
 	elemSize := uintptr(unsafe.Sizeof(slice[0]))
 	for i := 0; i < header.Cap; i++ {
 		address := header.Data + uintptr(i)*elemSize
