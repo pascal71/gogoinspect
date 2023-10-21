@@ -124,10 +124,8 @@ func max(a, b int) int {
 }
 
 func VisualizeString(s string) {
-	// Convert the string to its header representation
 	header := (*reflect.StringHeader)(unsafe.Pointer(&s))
 
-	// Header of the ASCII representation
 	fmt.Println("    +----------------------+-------+")
 	fmt.Println("    | String               |  Len  |")
 	fmt.Println("    +----------------------+-------+")
@@ -136,16 +134,87 @@ func VisualizeString(s string) {
 	fmt.Println("        |")
 	fmt.Println("        v")
 	fmt.Println("        |")
-	fmt.Println("    +---------------------------------+")
-
-	// Underlying byte array
-	for i := 0; i < header.Len; i++ {
+	fmt.Println("    +--------------------+--------------+")
+	i := 0
+	for i < len(s) {
 		address := header.Data + uintptr(i)
-		char := s[i]
-		// fmt.Printf("    | %4q ('%c') | 0x%016x |\n", char, char, address)
-		fmt.Printf("    | 0x%016x | %4q ('%c') |\n", address, char, char)
-		fmt.Println("    +---------------------------------+")
+		charDisplay, bytesRead := byteSequenceRepresentation(s[i:])
+		if len(charDisplay) == 3 {
+			fmt.Printf("    | 0x%016x | %-12s |\n", address, charDisplay)
+		} else {
+			fmt.Printf("    | 0x%016x | %-11s |\n", address, charDisplay)
+		}
+		for j := 1; j < bytesRead; j++ {
+			fmt.Printf("    | 0x%016x | %-12s |\n", address+uintptr(j), "")
+		}
+		fmt.Println("    +--------------------+--------------+")
+		i += bytesRead
+	}
+	fmt.Println()
+}
+
+func byteSequenceRepresentation(subs string) (charDisplay string, bytesRead int) {
+	b := subs[0]
+	switch {
+	case b < 0x80:
+		return fmt.Sprintf("'%c'", b), 1
+	case b >= 0xC0 && b < 0xE0:
+		return fmt.Sprintf("\"%s\"", subs[:2]), 2
+	case b >= 0xE0 && b < 0xF0:
+		return fmt.Sprintf("\"%s\"", subs[:3]), 3
+	case b >= 0xF0:
+		return fmt.Sprintf("\"%s\"", subs[:4]), 4
+	}
+	return "", 0
+}
+
+func VisualizeStruct(v interface{}) {
+	val := reflect.ValueOf(v)
+	if val.Kind() == reflect.Ptr {
+		val = val.Elem()
 	}
 
-	fmt.Println()
+	if val.Kind() != reflect.Struct {
+		fmt.Println("Input is not a struct!")
+		return
+	}
+
+	structName := val.Type().Name()
+	fmt.Printf("[%s struct]\n", structName)
+
+	fmt.Printf(
+		"+--------------------------+--------------------+-----------+------------------+----------+------------+\n",
+	)
+	fmt.Printf(
+		"| Field Name               | Memory Address     | Value     | Type             | Size     | Padding    |\n",
+	)
+	fmt.Printf(
+		"+--------------------------+--------------------+-----------+------------------+----------+------------+\n",
+	)
+
+	var prevFieldEnd uintptr
+	for i := 0; i < val.NumField(); i++ {
+		field := val.Field(i)
+		fieldType := val.Type().Field(i)
+		size := field.Type().Size()
+		addr := field.UnsafeAddr()
+		padding := uintptr(0)
+
+		if i != 0 {
+			padding = addr - prevFieldEnd
+		}
+		prevFieldEnd = addr + size
+
+		valueStr := fmt.Sprint(field.Interface())
+		if len(valueStr) > 8 {
+			valueStr = valueStr[:5] + "..."
+		}
+
+		fmt.Printf("| %-24s | 0x%016x | %-9s | %-16s | %8d | %10d |\n",
+			fieldType.Name, addr, valueStr, field.Type(), size, padding)
+	}
+
+	fmt.Printf(
+		"+--------------------------+--------------------+-----------+------------------+----------+------------+\n",
+	)
 }
